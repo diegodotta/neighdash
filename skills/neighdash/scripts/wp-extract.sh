@@ -25,6 +25,8 @@ echo "name:      \$(wp option get blogname \$P 2>/dev/null)"
 echo "tagline:   \$(wp option get blogdescription \$P 2>/dev/null)"
 echo "permalink: \$(wp option get permalink_structure \$P 2>/dev/null)"
 echo "front:     show_on_front=\$(wp option get show_on_front \$P 2>/dev/null) page_on_front=\$(wp option get page_on_front \$P 2>/dev/null)"
+echo "### ACTIVE PLUGINS (map each one: references/limits.md)"
+wp plugin list --status=active --fields=name,title,version --format=csv \$P 2>/dev/null
 echo "### PAGES (id,type,slug,title)"
 wp post list --post_type=page,post --post_status=publish --fields=ID,post_type,post_name,post_title --format=csv \$P 2>/dev/null
 echo "### IDS (id,url)"

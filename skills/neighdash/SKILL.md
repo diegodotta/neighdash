@@ -93,9 +93,12 @@ Chrome. `pixel-diff.sh` also needs ImageMagick. Zone work (DNS, rules, bot
 settings) needs the Cloudflare MCP server or a scoped API token: the wrangler login
 can deploy Workers but can't change zones.
 
-## What NeighDash is not
+## Is it the right fit?
 
-Not a CMS and not a site generator framework. It fits sites with one or a few
-writers who publish now and then and are happy editing files (or asking an agent
-to). A newsroom with many editors, scheduled posts and review flows needs a real
-CMS. Say so if that's the user.
+Read [references/limits.md](references/limits.md) with the user before starting.
+Multiple editors, comments, scheduled posts, search and forms are all solvable. The
+real limits are ownership and scale: every dynamic feature becomes code someone
+maintains, publishing is a deploy, "rebuild everything" has file and build-time
+ceilings, and owners who don't use git lose the ability to edit their own site.
+Logins, paywalls and shops mean an app, not NeighDash. Map the old site's plugins
+(the plugin map in limits.md) before converting anything.

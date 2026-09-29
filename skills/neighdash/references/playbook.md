@@ -33,11 +33,20 @@ in `${CLAUDE_SKILL_DIR}/scripts/`, templates in `${CLAUDE_SKILL_DIR}/templates/`
    finds these (trap 12).
 4. **Snapshot the DNS zone** (every record, exact content, proxied flag, TTL) into
    the handoff folder before touching anything.
-5. **Mail.** List mailboxes, MX, SPF, DKIM, DMARC, and third party *sending* records
+5. **Plugins.** List the active plugins (`wp-extract.sh` prints them) and decide each
+   one with the user using the plugin map in [limits.md](limits.md): rebuilt
+   statically, replaced by a service, a Worker, or dropped. Membership, shop or
+   booking plugins mean the site is an app. Stop and talk before going further.
+6. **Mail.** List mailboxes, MX, SPF, DKIM, DMARC, and third party *sending* records
    (newsletter tools add DKIM CNAMEs). Mail decides when the old host can be cancelled,
    and a domain that sends newsletters is not a "no mail" domain.
 
 ## 2. Pick the shape per site
+
+First check the fit with the user: [limits.md](limits.md) lists what's solvable and
+what isn't. The honest trade is ownership (every dynamic feature becomes code they
+own) and who can edit (owners who don't use git need a git-based editor, or someone
+to do it for them).
 
 | Site | Shape |
 |---|---|

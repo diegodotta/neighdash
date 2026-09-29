@@ -20,8 +20,13 @@ do the same migration without learning every lesson the hard way.
   proves the redirects on Cloudflare's real router.
 - A before and after report (Lighthouse and a deliberately honest carbon estimate).
 
-It fits blogs, portfolios and small business sites with one or a few writers.
-If you need many editors, scheduled posts and review flows, you want a real CMS.
+It fits sites that mostly exist to be read: blogs, portfolios, small business
+sites. Several editors, comments, scheduled posts and search all have static
+answers. The real trade is ownership: WordPress plugins are maintained by someone
+else, while here every dynamic feature becomes code you (or your agent) own, and
+publishing means a deploy. Logins, paywalls and shops are apps, not NeighDash.
+The full list, with a plugin-by-plugin map, is in
+[references/limits.md](skills/neighdash/references/limits.md).
 
 ## Install
 
@@ -48,6 +53,7 @@ skills/neighdash/
   SKILL.md                 the entry point your agent reads
   references/playbook.md   the procedure, step by step
   references/traps.md      30 things that went wrong on real migrations, and the fix
+  references/limits.md     what's solvable, what's a real limit, and a plugin map
   references/cloudflare.md API recipes: cutover with rollback, www rule, bot settings, usage
   templates/               wrangler configs, ignores, _headers, _redirects, Worker, probe
   scripts/                 scaffold, extract, gates, route check, QA, Lighthouse, report
