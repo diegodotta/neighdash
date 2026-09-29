@@ -55,6 +55,20 @@ async () => {
   const apex = "example.com", worker = "example-com";
   const z = (await cloudflare.request({ method: "GET", path: "/zones", query: { name: apex } })).result[0];
   const hosts = [apex, `www.${apex}`];
+  // 0. refuse if mail depends on the records we're about to delete (traps.md 31)
+  const all = [];
+  for (let page = 1; ; page++) {
+    const r = await cloudflare.request({ method: "GET", path: `/zones/${z.id}/dns_records`, query: { per_page: 100, page } });
+    all.push(...r.result);
+    if (page >= (r.result_info?.total_pages || 1)) break;
+  }
+  const risky = all.filter(r =>
+    // MX or other CNAMEs (mail, webmail, autodiscover) aimed at the apex or www.
+    // The www CNAME itself is a web record the cutover replaces, so it doesn't count.
+    ((r.type === "MX" || (r.type === "CNAME" && !hosts.includes(r.name))) && hosts.includes(r.content.replace(/\.$/, ""))) ||
+    (r.type === "TXT" && /v=spf1/.test(r.content) && /(^|\s)[+~?]?(a|mx)(\s|$)/.test(r.content.replace(/"/g, ""))));
+  if (risky.length) return { refused: "mail depends on the apex or www, fix it first (playbook step 8.0)",
+    records: risky.map(r => `${r.type} ${r.name} -> ${r.content}`) };
   // 1. back up exactly the web records (never MX, TXT, mail hosts)
   const backup = [];
   for (const h of hosts) {

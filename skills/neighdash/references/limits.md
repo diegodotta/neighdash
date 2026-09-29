@@ -12,7 +12,7 @@ ownership and scale, not features.
 | "We need comments" | Giscus (GitHub Discussions, no backend), or a small Worker with D1 and Turnstile against spam. |
 | "We schedule posts" | The build skips posts dated in the future. A daily Workers Cron Trigger or GitHub Action calls the Worker's Deploy Hook, and whatever is due goes live. |
 | "We need search" | Pagefind: a build-time index searched in the browser. Fine into the thousands of pages. |
-| "Contact form" | A form service, or a Worker with Turnstile that sends the message on. |
+| "Contact form" | A form service (the simplest choice for a non-technical owner: an embed or a form endpoint, nothing to run). Or a Worker with Turnstile, which also needs an email-sending setup to deliver the message. |
 | "Newsletter signup" | The newsletter provider's embed or form endpoint. |
 | "SEO plugin" | Sitemaps, canonical tags, OpenGraph and structured data come from the build. Redirects go in `_redirects`. |
 | "We change things all the time" | A build takes about a minute. Fine for a few changes a day. |

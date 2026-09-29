@@ -26,20 +26,39 @@ in `${CLAUDE_SKILL_DIR}/scripts/`, templates in `${CLAUDE_SKILL_DIR}/templates/`
    and their `/page/N/`, feeds (`/feed/`, `/comments/feed/`, `/<post>/feed/`),
    `?p=` and `?page_id=` shortlinks, `?s=` search, the Yoast/core sitemaps, and every
    `/wp-content/uploads/...` file including the `-1024x683` size variants and
-   `-scaled` originals. With SSH: `scripts/wp-extract.sh`. Without: the sitemaps plus
-   a crawl of the rendered site.
+   `-scaled` originals. With SSH: `scripts/wp-extract.sh`. Without: WordPress's
+   Tools, Export (every post with its ID and attachment URLs), the sitemaps, and a
+   crawl of the rendered site.
 3. **Mine the access logs** for what the outside world links: hotlinked images
    (Google Images, forums), URLs baked into mobile apps, share pages. A crawl never
-   finds these (trap 12).
+   finds these (trap 12). Without SSH, the owner downloads them from the host panel
+   (cPanel calls them "Raw Access").
 4. **Snapshot the DNS zone** (every record, exact content, proxied flag, TTL) into
-   the handoff folder before touching anything.
+   the handoff folder before touching anything. Where it lives decides how:
+   - Already on Cloudflare: export it through the API.
+   - At the web host: the owner exports it (cPanel Zone Editor) or screenshots every
+     page of it. A zone can't be listed from outside.
+   - As a cross-check, `dig` the usual names: the apex, `www`, `mail`, `webmail`,
+     `autodiscover`, `ftp`, MX, TXT, `_dmarc`, and DKIM selectors
+     (`default._domainkey`, `google`, `selector1`, `selector2`, `k1`, `s1`, `s2`,
+     `mandrill`). Unknown selectors can't be guessed, which is why the owner's export
+     matters.
+   - Check DNSSEC now: `dig DS <domain> +short`. Any answer means it's on (step 6).
 5. **Plugins.** List the active plugins (`wp-extract.sh` prints them) and decide each
    one with the user using the plugin map in [limits.md](limits.md): rebuilt
    statically, replaced by a service, a Worker, or dropped. Membership, shop or
    booking plugins mean the site is an app. Stop and talk before going further.
-6. **Mail.** List mailboxes, MX, SPF, DKIM, DMARC, and third party *sending* records
-   (newsletter tools add DKIM CNAMEs). Mail decides when the old host can be cancelled,
-   and a domain that sends newsletters is not a "no mail" domain.
+6. **Mail.** Where do mailboxes live: the web host, Google Workspace, Microsoft 365,
+   or nowhere? List MX, SPF, DKIM, DMARC and third party *sending* records (newsletter
+   tools add DKIM CNAMEs). Note every record that points at the apex itself (on
+   cPanel hosts the MX, `mail` and `webmail` often do, trap 31). Mail decides when
+   the old host can be cancelled, and a domain that sends newsletters is not a
+   "no mail" domain.
+7. **WordPress.com is different.** No SSH, no server logs, and it often runs the
+   domain's DNS and email (Professional Email). Export content from its dashboard,
+   crawl the rendered pages, and plan the nameserver and mail moves with its own
+   domain settings. Also check whether the domain is registered through the hosting
+   account: then cancelling the hosting can take the domain with it.
 
 ## 2. Pick the shape per site
 
@@ -113,13 +132,39 @@ whether a file exists (old image URLs to WebP), live data splices, a small API.
 
 Recipes in [cloudflare.md](cloudflare.md).
 
+**Zone access first.** The wrangler login can deploy Workers but can't touch DNS or
+rules. Add the Cloudflare MCP server now (it restarts the session: update CONTEXT.md
+and tell the owner first), or use a scoped token the owner saves to a file (SKILL.md,
+Tools). Never a token pasted into the chat.
+
+**If the domain isn't on Cloudflare yet**, move its DNS first. This doesn't change
+the website, but done carelessly it breaks email.
+
+0. **DNSSEC.** If `dig DS <domain> +short` answers, DNSSEC is on at the registrar.
+   The owner turns it off there, then wait for the DS record's TTL to pass before
+   changing nameservers. Otherwise validating resolvers reject the domain, site and
+   email both (trap 32). Turn it back on from Cloudflare once the zone is Active.
+1. Add the site to Cloudflare (free plan). Cloudflare imports the existing records by
+   scanning, and it can miss some. Compare the imported zone with the snapshot from
+   step 1, especially MX, TXT (SPF, DKIM, DMARC) and any subdomains, and add what's
+   missing.
+2. Set the imported web records to **DNS only** (grey cloud) for now, so visitors
+   still reach the old host exactly as before. Proxying the old WordPress through
+   Cloudflare can cause redirect loops or certificate errors, and nothing here needs it.
+3. The owner changes the nameservers at their registrar. Guide them click by click,
+   it's their account.
+4. Wait for the zone to show as Active (minutes to a day). Send a test email to the
+   domain and check it arrives before going further.
+5. The registration itself can stay where it is. Moving it to Cloudflare Registrar
+   is optional and can wait.
+
 - Create the Worker **git-connected with a production-branch-only trigger.** A
   Worker created in the dashboard also gets a "deploy non-production branches"
   trigger, which deploys `dev` too (trap 5). Delete it, or create through the API.
 - A build reported as `stopped` means finished, not failed. The workers.dev URL is
   the ground truth (trap 20).
 
-## 7. Prove it before touching DNS
+## 7. Prove it before switching the site
 
 - **Route check on the real router:** write `routes.txt` from the inventory in step
   1 and run `scripts/route-check.sh routes.txt http://127.0.0.1:8787` against
@@ -132,11 +177,20 @@ Recipes in [cloudflare.md](cloudflare.md).
 - For any change that should not alter how pages look: `scripts/pixel-diff.sh`,
   with a control run first (trap 11).
 
+**Freeze WordPress edits** from the day of the final crawl. Tell the owner the date.
+Anything edited in WordPress after it is lost unless you crawl again.
+
 ## 8. Cutover (user says yes first)
 
 The zero-downtime version, in one scripted API call (recipe in
 [cloudflare.md](cloudflare.md)):
 
+0. **Mail dependencies first** (trap 31). List every record whose content is the apex
+   or `www` (MX targets, `mail`, `webmail`, `autodiscover`, `ftp` CNAMEs) and every
+   SPF that uses `a` or `mx`. If there are any: create `mail.<domain>` as an `A` record
+   to the old host's IP (DNS only), repoint the MX and those CNAMEs to it, rewrite SPF
+   with an explicit `ip4:` for the old host, then send a test email in and out. Only
+   when mail passes, continue. The cutover script in cloudflare.md refuses otherwise.
 1. Back up the apex `A`/`AAAA` and `www` `CNAME` records.
 2. Delete **only** those. Never MX, SPF, DKIM, DMARC, or mail hosts.
 3. Attach both custom domains to the Worker through the API. If either attach
@@ -157,11 +211,22 @@ The zero-downtime version, in one scripted API call (recipe in
 - Read the carbon section honestly (see "Reading the report" below).
 - Watch the account's daily Worker requests for a few days (GraphQL query in
   [cloudflare.md](cloudflare.md)).
-- **Mail before cancelling.** Email Routing receives only. Replying needs a
-  separate sending setup. A domain with no mail at all gets an explicit null
-  mail policy (null MX, `v=spf1 -all`, DMARC `p=reject`).
-- Cancel the old hosting only when nothing (web, mail, cron, backups) depends on it,
-  and keep a final backup of the database and uploads.
+- **Lock down the old WordPress.** Until the hosting is cancelled it stays online at
+  the host (by IP or a temporary address), unpatched. Put it behind a password or in
+  maintenance mode right after the cutover.
+- **Mail before cancelling.** Three cases:
+  - Mail at Google Workspace or Microsoft 365: nothing to move. Keep their records.
+  - No mailboxes at all: an explicit null mail policy (null MX, `v=spf1 -all`, DMARC
+    `p=reject`), unless something *sends* as the domain.
+  - **Mailboxes at the web host** (the usual small business case): pick a provider
+    with the owner (it costs a few dollars per mailbox per month), create the
+    mailboxes, copy the old mail over IMAP, update the owner's phone and computer,
+    then change the MX after a yes. Keep the old host until mail has stopped
+    arriving there. Cloudflare Email Routing only forwards incoming mail, it can't be
+    the mailbox the owner replies from.
+- Cancel the old hosting only when nothing (web, mail, cron, backups, the domain
+  registration) depends on it. Delete the WordPress install and its database there,
+  and keep an offline backup of both.
 
 ## Reading the report
 

@@ -2,8 +2,7 @@
 
 Cloudflare moved its blog to a CMS called [EmDash](https://blog.cloudflare.com/cloudflare-blog-uses-emdash/).
 I moved eight websites off a shared server that kept falling over, with no CMS at
-all, and called it NeighDash (neigh sounds like nay, so still no dash, no em dashes
-in the writing and no dashboard to log into). The whole story is
+all, and called it NeighDash (nay CMS, nay dashboard, nay logins, nay database, nay headaches). The whole story is
 [on my blog](https://diego.horse/cloudflare-built-emdash-i-built-neighdash/).
 
 This repo is the part you can reuse: a [Claude Code](https://claude.com/claude-code)
@@ -28,9 +27,25 @@ publishing means a deploy. Logins, paywalls and shops are apps, not NeighDash.
 The full list, with a plugin-by-plugin map, is in
 [references/limits.md](skills/neighdash/references/limits.md).
 
+## Start here
+
+**Not technical?** Open [Claude Code](https://claude.com/claude-code) (the desktop app
+is the friendliest way in) and paste this, with your own address:
+
+```text
+Help me move my website example.com off WordPress and onto Cloudflare using NeighDash (https://github.com/diegodotta/neighdash). I'm not technical. Read the repo's skills/neighdash/SKILL.md first, explain each step in plain words before doing it, do the typing for me, and ask me before anything that could take my site or my email down.
+```
+
+It will still need you for what only a human can do: creating free GitHub and
+Cloudflare accounts, clicking "allow" when a login pops up, typing your computer's
+password if it installs a missing tool, and saying yes before anything that touches
+your domain or your email. It never needs your passwords in the chat. If your email
+lives at your web host today, it will also need a new home (a few dollars a month per
+mailbox), and the skill walks you through that before anything is cancelled.
+
 ## Install
 
-In Claude Code:
+Already using Claude Code? Install the skill so it loads on its own:
 
 ```
 /plugin marketplace add diegodotta/neighdash
@@ -52,7 +67,7 @@ plus those files.
 skills/neighdash/
   SKILL.md                 the entry point your agent reads
   references/playbook.md   the procedure, step by step
-  references/traps.md      30 things that went wrong on real migrations, and the fix
+  references/traps.md      32 things that go wrong on real migrations, and the fix
   references/limits.md     what's solvable, what's a real limit, and a plugin map
   references/cloudflare.md API recipes: cutover with rollback, www rule, bot settings, usage
   templates/               wrangler configs, ignores, _headers, _redirects, Worker, probe

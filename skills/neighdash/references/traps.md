@@ -92,6 +92,21 @@ publishes a complete asset manifest, so two pipelines publishing into one Worker
 each other. A Worker on a path route (`example.com/games/*`) runs in front of the
 Custom Domain Worker. The route lives in account state, not git. Write it down.
 
+**31. Mail that points at the website's address breaks at cutover.** On typical
+cPanel hosts the MX record is the domain itself (`MX 0 example.com`), `mail`,
+`webmail`, `autodiscover` and `ftp` are CNAMEs to it, and SPF trusts `+a +mx`. The
+cutover deletes the apex record and hands the name to the Worker, so incoming mail,
+phone and desktop mail settings, and SPF all break, silently. Before the cutover give
+mail its own `mail.<domain>` A record to the old host (DNS only), repoint MX and the
+CNAMEs to it, write SPF with an explicit `ip4:`, and pass a mail test. It didn't bite
+the migrations this skill came from only because their mail already had its own hosts.
+
+**32. DNSSEC turns a nameserver change into an outage.** If DNSSEC is on at the
+registrar (`dig DS <domain> +short` answers), switching nameservers to Cloudflare
+leaves a DS record that no longer matches, and validating resolvers refuse the domain:
+site and email both. Turn DNSSEC off at the registrar, wait for the DS TTL, switch,
+then enable it again from Cloudflare.
+
 **29. The agent will deploy "just this once".** In the first migration the agent merged
 to the production branch twice without asking, the second time right after being told
 why not to. Put the rule in the agent's memory and in each repo's instructions.
