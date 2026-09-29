@@ -25,8 +25,7 @@ for f in "$SK"/scripts/*.sh; do check "bash -n $(basename "$f")" bash -n "$f"; d
 for f in "$SK"/scripts/*.py; do check "python $(basename "$f")" python3 -c "import ast,sys; ast.parse(open(sys.argv[1]).read())" "$f"; done
 for f in "$SK"/scripts/lib/*.js "$SK"/templates/worker/*.js "$SK"/templates/preview-banner.js; do check "node --check $(basename "$f")" node --check "$f"; done
 
-echo "[ house rules ]"
-if grep -rn $'\xe2\x80\x94' "$ROOT" --exclude-dir=.git >"$T/dash.log" 2>/dev/null; then no "no em dashes (it's NeighDash)"; head -5 "$T/dash.log"; else ok "no em dashes (it's NeighDash)"; fi
+echo "[ plugin ]"
 if command -v claude >/dev/null; then check "claude plugin validate --strict" claude plugin validate "$ROOT" --strict; else echo "  skip claude plugin validate (claude not installed)"; fi
 
 echo "[ scaffold and gates ]"

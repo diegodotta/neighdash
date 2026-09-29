@@ -87,11 +87,11 @@ then restart the session) or a scoped API token.
 
 ## Changing the skill
 
-Run `tests/selftest.sh` after any change. It checks every script's syntax, the house
-rules (no em dashes, it's NeighDash), the scaffold and both deploy gates (including
-the cases they must refuse), the Worker template against 21 legacy URLs on
-Cloudflare's own router, which paths run the Worker, and the local preview.
-`ONLINE=1` also reads a real sitemap.
+Run `tests/selftest.sh` after any change. It checks every script's syntax, the plugin
+structure, the scaffold and both deploy gates (including the cases they must
+refuse), the Worker template against 21 legacy URLs on Cloudflare's own router,
+which paths run the Worker, and the local preview. `ONLINE=1` also reads a real
+sitemap.
 
 ## Honest small print
 
