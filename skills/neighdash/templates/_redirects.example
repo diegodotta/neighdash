@@ -1,0 +1,17 @@
+# Copy into the build folder as _redirects. Path-only redirects, evaluated before
+# the assets. A plain destination keeps the request's query string; a destination
+# with its own query drops it (traps.md 19). No host or query matching: those go
+# in a Redirect Rule or the Worker.
+# Limits on the free plan: 2,000 static + 100 dynamic rules.
+
+# Renamed posts (never break a published URL)
+/old-slug/            /new-slug/                  301
+
+# WordPress leftovers
+/wp-login.php         /                           301
+/wp-admin/*           /                           301
+/posts/               /archive/                   301
+
+# Short links to forms
+/r/feedback           https://tally.so/r/XXXXXX   301
+/r/feedback/          https://tally.so/r/XXXXXX   301

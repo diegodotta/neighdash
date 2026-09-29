@@ -1,0 +1,11 @@
+{
+  "name": "neighdash",
+  "displayName": "NeighDash",
+  "version": "0.1.0",
+  "description": "A Stable Site Generator: move WordPress and shared-hosting sites to static files on Cloudflare's free plan, with an agent-safe playbook, templates and checks.",
+  "author": { "name": "Diego Dotta", "url": "https://diego.horse" },
+  "homepage": "https://diego.horse/cloudflare-built-emdash-i-built-neighdash/",
+  "repository": "https://github.com/diegodotta/neighdash",
+  "license": "MIT",
+  "keywords": ["wordpress", "cloudflare", "workers", "static-site", "migration", "skill"]
+}

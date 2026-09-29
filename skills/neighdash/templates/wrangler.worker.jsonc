@@ -1,0 +1,29 @@
+{
+  // NeighDash with a small Worker for what static files can't do (old WordPress
+  // URLs, ?p= shortlinks). Everything else is served as a plain file.
+  "name": "SITE-NAME-HERE",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    // The Worker runs ONLY on these paths. Everything else is a static asset, free
+    // and unlimited, while Worker requests share the account's 100,000 a day on the
+    // free plan (traps.md 2). Never `true`.
+    // With "404-page", a URL with no file behind it never reaches the Worker unless
+    // it is listed here, so every legacy URL shape the Worker rewrites must be in
+    // this list (traps.md 3). Prove it with scripts/route-check.sh on wrangler dev.
+    // www to apex is a zone Redirect Rule (www-redirect-rule.json), not this Worker.
+    "run_worker_first": [
+      "/",                                   // ?s= search, ?p= / ?page_id= shortlinks
+      "/wp-content/uploads/*",               // old .jpg/.png and -1024x683 variants → .webp
+      "!/wp-content/uploads/*.webp",         // ...but files that exist stay plain assets
+      "!/wp-content/uploads/*.gif",
+      "!/wp-content/uploads/*.mp4",
+      "/page/*", "/*/page/*",                // archive pages past the new end
+      "/*/feed", "/*/feed/",                 // /comments/feed/, /<post>/feed/
+      "/sitemap_index.xml", "/*-sitemap.xml" // Yoast's sitemaps
+    ]
+  }
+}

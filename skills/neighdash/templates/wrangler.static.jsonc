@@ -1,0 +1,17 @@
+{
+  // NeighDash, static only: Cloudflare serves the files in dist/, no Worker code.
+  // Rename "name" to the site's Worker name (example.com becomes example-com).
+  "name": "SITE-NAME-HERE",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    // Serve a build folder, never the repo root: .git, notes and scripts can't
+    // be published by construction (traps.md 1).
+    "directory": "./dist",
+    "not_found_handling": "404-page"
+  }
+  // After the cutover (playbook step 8), declare the domains so every deploy agrees:
+  // ,"routes": [
+  //   { "pattern": "example.com", "custom_domain": true },
+  //   { "pattern": "www.example.com", "custom_domain": true }
+  // ]
+}

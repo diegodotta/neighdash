@@ -1,0 +1,17 @@
+.DS_Store
+*.log
+node_modules/
+__pycache__/
+*.pyc
+
+# Build output is rebuilt by Cloudflare on every deploy.
+dist/
+
+# Local wrangler state. Never committed.
+.wrangler/
+
+# Local secrets. `wrangler dev` reads .dev.vars, production uses `wrangler secret put`.
+.env*
+!.env.example
+.dev.vars*
+!.dev.vars.example

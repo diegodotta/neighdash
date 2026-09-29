@@ -1,0 +1,13 @@
+{
+  "name": "neighdash",
+  "description": "NeighDash, a Stable Site Generator: leave WordPress for static files on Cloudflare.",
+  "owner": { "name": "Diego Dotta", "url": "https://diego.horse" },
+  "plugins": [
+    {
+      "name": "neighdash",
+      "source": "./",
+      "description": "Skill, templates and scripts to migrate WordPress and shared-hosting sites to static files on Cloudflare Workers.",
+      "version": "0.1.0"
+    }
+  ]
+}

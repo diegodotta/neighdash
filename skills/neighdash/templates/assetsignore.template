@@ -1,0 +1,21 @@
+# Copy to <build folder>/.assetsignore. The second line of defence: the first is
+# serving a build folder instead of the repo root (traps.md 1).
+.git
+.git/**
+.wrangler
+.wrangler/**
+
+# Ignore by class, not by name (traps.md 4). No Markdown is ever site content
+# here, so internal notes (READMEs, reports) can't ship by accident.
+*.md
+wrangler.jsonc
+.assetsignore
+.gitignore
+__pycache__
+__pycache__/**
+*.pyc
+
+# Local secrets: .gitignore keeps them out of git, but a local `wrangler deploy`
+# uploads whatever is on disk.
+.env*
+.dev.vars*
