@@ -151,6 +151,12 @@ Add a `_headers` file. Fingerprint CSS and JS (`?v=<hash>`) to cache them for a 
 **19. `_redirects` keeps the query string** on a plain destination and drops it when
 the destination has its own query. It can't match on host or on query.
 
+**33. A plain file server lies about redirects.** `python3 -m http.server` (or opening
+the HTML files directly) serves the files but ignores `_redirects`, `_headers`,
+`not_found_handling` and the Worker. Redirects look broken, or look fine when they
+aren't, and the 404 page never shows. Preview and test with `wrangler dev`
+(`scripts/preview.sh`), which is Cloudflare's own router running locally.
+
 **27. Put `favicon.ico` at the root.** Browsers ask for it regardless of `<link>` tags.
 
 ## Measuring

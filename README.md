@@ -39,7 +39,12 @@ Help me move my website example.com off WordPress and onto Cloudflare using Neig
 It will still need you for what only a human can do: creating free GitHub and
 Cloudflare accounts, clicking "allow" when a login pops up, typing your computer's
 password if it installs a missing tool, and saying yes before anything that touches
-your domain or your email. It never needs your passwords in the chat. If your email
+your domain or your email. It never needs your passwords in the chat.
+
+Before anything changes for your visitors, you'll see the new site twice: first on
+your own computer, then on a private Cloudflare address. Both carry a yellow bar at
+the top saying it's a preview and that your real site hasn't changed, so you always
+know which one you're looking at. Your real address never shows the bar. If your email
 lives at your web host today, it will also need a new home (a few dollars a month per
 mailbox), and the skill walks you through that before anything is cancelled.
 
@@ -71,13 +76,22 @@ skills/neighdash/
   references/limits.md     what's solvable, what's a real limit, and a plugin map
   references/cloudflare.md API recipes: cutover with rollback, www rule, bot settings, usage
   templates/               wrangler configs, ignores, _headers, _redirects, Worker, probe
-  scripts/                 scaffold, extract, gates, route check, QA, Lighthouse, report
+  scripts/                 scaffold, extract, local preview, gates, route checks, QA, report
+tests/selftest.sh          checks the whole kit (run it after changing anything)
 ```
 
 You'll need `git`, the GitHub CLI, Node.js, Python 3 and Chrome, plus a free
 Cloudflare account. For DNS and zone settings, the agent needs Cloudflare's MCP
 server (`claude mcp add --transport http cloudflare https://mcp.cloudflare.com/mcp`,
 then restart the session) or a scoped API token.
+
+## Changing the skill
+
+Run `tests/selftest.sh` after any change. It checks every script's syntax, the house
+rules (no em dashes, it's NeighDash), the scaffold and both deploy gates (including
+the cases they must refuse), the Worker template against 21 legacy URLs on
+Cloudflare's own router, which paths run the Worker, and the local preview.
+`ONLINE=1` also reads a real sitemap.
 
 ## Honest small print
 

@@ -110,6 +110,11 @@ earns its place when there are many pages sharing a layout.
   30 days, HTML revalidates (trap 18).
 - `favicon.ico` at the root, a real `404.html`, `robots.txt`, `sitemap.xml`,
   OpenGraph tags with an image that resolves, analytics if the user had it.
+- **Every page loads the preview banner:**
+  `<script src="/preview-banner.js" defer data-live="example.com"></script>` with
+  `templates/preview-banner.js` at the site root. Anywhere but the real domain
+  (the owner's computer, the workers.dev preview) it shows a bar saying this is a
+  preview. On the real domain it does nothing.
 - Pre-deploy: `scripts/safety-check.sh <dir>` must pass.
 
 ## 5. The Worker (only if needed)
@@ -166,9 +171,14 @@ the website, but done carelessly it breaks email.
 
 ## 7. Prove it before switching the site
 
-- **Route check on the real router:** write `routes.txt` from the inventory in step
-  1 and run `scripts/route-check.sh routes.txt http://127.0.0.1:8787` against
-  `npx wrangler dev`, then against the workers.dev URL. Every old URL must answer
+- **Run it locally the way Cloudflare will:** `scripts/preview.sh` in the site's
+  folder. It starts `wrangler dev` (Cloudflare's router on this computer, never a
+  plain file server, trap 33) on http://localhost:8787 and opens the browser.
+- **Route check on the real router:** generate `routes.txt` from the old sitemap
+  while it's still up (`scripts/routes-from-sitemap.py <domain> > routes.txt`), add
+  one real example of each legacy URL shape from the inventory, and run
+  `scripts/route-check.sh routes.txt http://localhost:8787`, then against the
+  workers.dev URL. Every old URL must answer
   as planned (200, or 301 to the right place) and nothing private may be served.
 - **Which paths run the Worker:** swap in `templates/worker/probe.js` locally
   (never committed) and check the `x-neighdash-worker` header. Status codes alone
@@ -176,6 +186,18 @@ the website, but done carelessly it breaks email.
 - `scripts/qa-check.sh <url>`: pages, leaks, 404, OpenGraph, analytics.
 - For any change that should not alter how pages look: `scripts/pixel-diff.sh`,
   with a control run first (trap 11).
+- **The owner's own look, in plain words.** Automated checks don't know what matters
+  to them. Walk them through it:
+  1. "I've started a preview on your computer. It opens in your browser with a yellow
+     bar at the top: that bar means only you can see it and your real site hasn't
+     changed."
+  2. "Open your real site in another tab and compare the pages you care about most:
+     the home page, your menu or prices, contact details, anything customers ask
+     about."
+  3. "Try an old link you know people use (from Google, an email, a social post)."
+  4. "Tell me anything that looks wrong, missing or different, even small things."
+  5. After fixes, repeat on the online preview (the bar says "Private preview").
+     Only when they say it looks right, ask about the cutover.
 
 **Freeze WordPress edits** from the day of the final crawl. Tell the owner the date.
 Anything edited in WordPress after it is lost unless you crawl again.

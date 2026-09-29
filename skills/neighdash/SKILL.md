@@ -57,6 +57,7 @@ you do the typing and they make the decisions.
   | who keeps the address book | nameservers |
   | where your email gets delivered | MX records |
   | publish the new version | merge to the production branch |
+  | a preview on your computer | `http://localhost:8787` from `scripts/preview.sh` |
   | a private preview link | the workers.dev URL |
 
 - **Check the computer first**, without changing anything: `git`, `gh`, Node.js,
@@ -74,7 +75,12 @@ you do the typing and they make the decisions.
   downloaded by the owner.
 - **Before every step that could break something,** say what will happen, how long it
   takes, what they'll notice, and how to undo it. Then wait for a yes.
-- **Show before switching:** give them the preview link and let them click around.
+- **Show before switching, twice.** First on their computer (`scripts/preview.sh`),
+  then on the online preview. Every page carries a yellow bar
+  (`templates/preview-banner.js`) that says it's a preview and that the real site
+  hasn't changed, because a non-technical owner can't tell localhost from the
+  internet. Tell them what the bar means, then walk them through the checklist in
+  playbook step 7. Their "looks right" comes before any cutover question.
 - **End with a one-page note in plain words:** where the site lives now, how to change
   a page (ask an agent, or edit on GitHub), that `/wp-admin` no longer exists, what
   renews when (domain, email), and what to do if something looks wrong.
@@ -145,7 +151,9 @@ Run scripts from the site's folder.
 | `archive-wp.py <host> <path> <outdir> [--origin ip]` | Save an original page with its assets, to compare offline |
 | `safety-check.sh [dir]` | Pre-push gate: what gets served, secrets, 25 MiB files |
 | `check-dist.py <dist>` | Deploy gate for the build command (edit its SETTINGS) |
-| `route-check.sh <routes.txt> <base>` | Every old URL against `wrangler dev` or the live site |
+| `preview.sh [dir]` | Run the site on this computer the way Cloudflare will, and open it |
+| `routes-from-sitemap.py <domain>` | Write a starting `routes.txt` from the old site's sitemap |
+| `route-check.sh <routes.txt> <base>` | Every old URL against the local preview or the live site |
 | `qa-check.sh <url>` | Pages, leaks, 404, OpenGraph, analytics |
 | `perf-audit.sh <url> [desktop]` | Local Lighthouse with every failing audit (`RUNS=3`) |
 | `migration-report.sh <domain> --before/--after/--report` | Before/after Lighthouse, page weight, modelled carbon |
@@ -159,6 +167,7 @@ Run scripts from the site's folder.
 | `wrangler.worker.jsonc` | With the legacy-redirect Worker and a narrow `run_worker_first` |
 | `worker/legacy-redirects.js` | Old uploads to WebP, `?p=`, `?s=`, `/page/N/`, feeds, sitemaps |
 | `worker/probe.js` | Local only: shows which paths still invoke the Worker |
+| `preview-banner.js` | The yellow "this is a preview" bar, silent on the real domain |
 | `www-redirect-rule.json` | The zone Redirect Rule for www to apex |
 | `assetsignore.template`, `gitignore.template`, `_headers`, `_redirects.example` | Copy into place |
 
