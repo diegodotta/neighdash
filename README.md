@@ -93,6 +93,11 @@ refuse), the Worker template against 21 legacy URLs on Cloudflare's own router,
 which paths run the Worker, and the local preview. `ONLINE=1` also reads a real
 sitemap.
 
+## What's next
+
+Editing from the preview (publish, unpublish and re-date posts from a bar on the page)
+and starting a new blog from scratch. The plan is in [ROADMAP.md](ROADMAP.md).
+
 ## Honest small print
 
 Tested on my eight sites, which are small (the biggest has 251 posts). The limits
