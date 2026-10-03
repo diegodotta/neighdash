@@ -7,7 +7,7 @@
       "name": "neighdash",
       "source": "./",
       "description": "Skill, templates and scripts to migrate WordPress and shared-hosting sites to static files on Cloudflare Workers.",
-      "version": "0.1.0"
+      "version": "0.2.0"
     }
   ]
 }

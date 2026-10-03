@@ -18,6 +18,9 @@ do the same migration without learning every lesson the hard way.
 - A deploy that refuses to publish when something is wrong, and a route check that
   proves the redirects on Cloudflare's real router.
 - A before and after report (Lighthouse and a deliberately honest carbon estimate).
+- Optionally, for Markdown blogs: publish, unpublish and re-date posts from a bar on
+  the preview on your own computer, without opening a file. Nothing goes live until
+  it's deployed.
 
 It fits sites that mostly exist to be read: blogs, portfolios, small business
 sites. Several editors, comments, scheduled posts and search all have static
@@ -75,8 +78,10 @@ skills/neighdash/
   references/traps.md      32 things that go wrong on real migrations, and the fix
   references/limits.md     what's solvable, what's a real limit, and a plugin map
   references/cloudflare.md API recipes: cutover with rollback, www rule, bot settings, usage
-  templates/               wrangler configs, ignores, _headers, _redirects, Worker, probe
-  scripts/                 scaffold, extract, local preview, gates, route checks, QA, report
+  templates/               wrangler configs, ignores, _headers, _redirects, Worker, probe,
+                           the preview bar and the preview's admin bar
+  scripts/                 scaffold, extract, local preview and edit server, gates,
+                           route checks, QA, report
 tests/selftest.sh          checks the whole kit (run it after changing anything)
 ```
 
@@ -90,13 +95,14 @@ then restart the session) or a scoped API token.
 Run `tests/selftest.sh` after any change. It checks every script's syntax, the plugin
 structure, the scaffold and both deploy gates (including the cases they must
 refuse), the Worker template against 21 legacy URLs on Cloudflare's own router,
-which paths run the Worker, and the local preview. `ONLINE=1` also reads a real
+which paths run the Worker, the local preview, and the edit server (including the
+requests it must refuse). `ONLINE=1` also reads a real
 sitemap.
 
 ## What's next
 
-Editing from the preview (publish, unpublish and re-date posts from a bar on the page)
-and starting a new blog from scratch. The plan is in [ROADMAP.md](ROADMAP.md).
+Starting a new blog from scratch, with a home page, posts, About, a menu and a footer
+ready to write in. The plan is in [ROADMAP.md](ROADMAP.md).
 
 ## Honest small print
 

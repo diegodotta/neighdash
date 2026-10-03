@@ -82,7 +82,8 @@ you do the typing and they make the decisions.
   internet. Tell them what the bar means, then walk them through the checklist in
   playbook step 7. Their "looks right" comes before any cutover question.
 - **End with a one-page note in plain words:** where the site lives now, how to change
-  a page (ask an agent, or edit on GitHub), that `/wp-admin` no longer exists, what
+  a page (ask an agent, edit on GitHub, or, if editing from the preview is set up,
+  publish and re-date posts from the bar on the preview), that `/wp-admin` no longer exists, what
   renews when (domain, email), and what to do if something looks wrong.
 
 ## 3. Ground rules (agree them with the user)
@@ -151,7 +152,8 @@ Run scripts from the site's folder.
 | `archive-wp.py <host> <path> <outdir> [--origin ip]` | Save an original page with its assets, to compare offline |
 | `safety-check.sh [dir]` | Pre-push gate: what gets served, secrets, 25 MiB files |
 | `check-dist.py <dist>` | Deploy gate for the build command (edit its SETTINGS) |
-| `preview.sh [dir]` | Run the site on this computer the way Cloudflare will, and open it |
+| `preview.sh [dir]` | Run the site on this computer the way Cloudflare will, and open it (with the edit server when `neighdash.json` opts in) |
+| `edit-server.py [dir]` | Local only: lets the preview's admin bar publish, unpublish and re-date Markdown posts, then rebuilds (playbook step 4) |
 | `routes-from-sitemap.py <domain>` | Write a starting `routes.txt` from the old site's sitemap |
 | `route-check.sh <routes.txt> <base>` | Every old URL against the local preview or the live site |
 | `qa-check.sh <url>` | Pages, leaks, 404, OpenGraph, analytics |
@@ -168,6 +170,7 @@ Run scripts from the site's folder.
 | `worker/legacy-redirects.js` | Old uploads to WebP, `?p=`, `?s=`, `/page/N/`, feeds, sitemaps |
 | `worker/probe.js` | Local only: shows which paths still invoke the Worker |
 | `preview-banner.js` | The yellow "this is a preview" bar, silent on the real domain |
+| `neighdash-admin.js` | The preview's admin bar (drafts, publish, unpublish, date), for preview builds only |
 | `www-redirect-rule.json` | The zone Redirect Rule for www to apex |
 | `assetsignore.template`, `gitignore.template`, `_headers`, `_redirects.example` | Copy into place |
 

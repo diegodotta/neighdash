@@ -6,13 +6,13 @@ the kit. Ideas and pull requests are welcome.
 
 ## 0.2: Edit from the preview
 
-**Status: working on diego.horse, being made generic.**
+**Status: done in 0.2.0.** Set up per site in playbook step 4.
 
 A static site has no admin panel, and that's mostly the point. But small chores, like
 publishing a draft or fixing a date, shouldn't need anyone to open a Markdown file. So
 the local preview gets an admin bar across the top of every page:
 
-- a link to the drafts list, with how many there are
+- the drafts, with how many there are, each with its own **Publish** button
 - on a post: Draft or Published, then **Publish**, **Publish dated today** or **Unpublish**
 - a date field to re-date a post
 - **Open in editor** for the post's file, and a link to the live page
@@ -23,11 +23,12 @@ and your approval, like every other deploy.
 
 To work with whatever generator a site uses, it comes as:
 
-- a small local edit server, next to `scripts/preview.sh`, that accepts requests from
-  this computer only, with a custom header so other websites can't trigger it
-- an admin bar script (growing out of `templates/preview-banner.js`) that reads a small
-  JSON file the build writes: which page comes from which file, whether it's a draft,
-  its date
+- a small local edit server (`scripts/edit-server.py`), started by `scripts/preview.sh`,
+  that accepts requests from this computer only, with a custom header so other
+  websites can't trigger it
+- an admin bar script (`templates/neighdash-admin.js`) that takes the place of the
+  yellow preview bar, and reads a small JSON file the preview build writes: which page
+  comes from which file
 - a rule in `scripts/check-dist.py` that refuses to deploy if the bar ever reaches the
   built site, plus self-test cases for all of it
 

@@ -116,6 +116,22 @@ earns its place when there are many pages sharing a layout.
   (the owner's computer, the workers.dev preview) it shows a bar saying this is a
   preview. On the real domain it does nothing.
 - Pre-deploy: `scripts/safety-check.sh <dir>` must pass.
+- **Editing from the preview (Markdown sites).** Owners who don't want to open files
+  can publish, unpublish and re-date posts from a bar on the preview. The site's build
+  needs a preview mode (e.g. `build.py --preview`) that, and only that, does three
+  things: includes drafts, loads
+  `<script src="/neighdash-admin.js" defer data-live="example.com"></script>`
+  (`templates/neighdash-admin.js` at the build root), and writes
+  `/neighdash-pages.json` mapping each page to its file:
+  `{ "/hello-world/": "content/posts/hello-world.md" }`. Then the site opts in with a
+  `neighdash.json` next to its wrangler config:
+  `{ "edit": { "content": "content", "build": "python3 build.py --preview" } }`, and
+  `scripts/preview.sh` starts `scripts/edit-server.py` beside the preview. The bar
+  replaces the yellow preview bar on that computer only. Its buttons change the front
+  matter (`draft: true`, `date:`) and rerun the preview build, nothing more: going live
+  is still a commit and a deploy, with the owner's yes. The production build must do
+  none of the three; `check-dist.py` refuses a build that loads the bar or carries the
+  page map.
 
 ## 5. The Worker (only if needed)
 

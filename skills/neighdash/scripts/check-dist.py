@@ -46,12 +46,19 @@ for core in S["required"]:
     if not (DIST / core).exists():
         fail(f"missing {core}")
 
+# The local admin bar (templates/neighdash-admin.js) and its page map only belong in
+# preview builds. Not a setting: a deployable build never carries them.
+if any(f.name == "neighdash-pages.json" for f in files):
+    fail("neighdash-pages.json is in the build folder: this is a preview build, never deploy it")
+
 ref_re = re.compile(r'(?:src|poster|href)="(/[^"#?]+)"|srcset="([^"]+)"')
 own = re.compile(rf'https://(?:www\.)?{re.escape(S["domain"])}(/wp-content/[^"\s<>)]+)') if S["domain"] else None
 seen = set()
 for p in pages:
     html = p.read_text(encoding="utf-8", errors="ignore")
     rel = p.relative_to(DIST)
+    if "neighdash-admin.js" in html:
+        fail(f"loads the local admin bar (preview build): {rel}")
     if S["draft_marker"] and S["draft_marker"] in html:
         fail(f"draft published: {rel}")
     if S["analytics"] and S["analytics"] not in html and rel.name != "404.html":

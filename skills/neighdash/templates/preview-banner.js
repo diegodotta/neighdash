@@ -30,6 +30,7 @@
   if (document.title.indexOf("PREVIEW") !== 0) document.title = "PREVIEW · " + document.title;
 
   var bar = document.createElement("div");
+  bar.id = "neighdash-preview-bar";   // neighdash-admin.js takes its place when editing is on
   bar.setAttribute("role", "note");
   bar.style.cssText = "position:sticky;top:0;z-index:2147483647;display:flex;gap:12px;align-items:center;" +
     "justify-content:center;padding:10px 44px 10px 16px;background:#ffd400;color:#111;" +
@@ -58,6 +59,9 @@
   bar.appendChild(label);
   bar.appendChild(close);
 
-  function show() { document.body.insertBefore(bar, document.body.firstChild); }
+  function show() {
+    if (document.getElementById("neighdash-admin")) return;   // the admin bar already says it
+    document.body.insertBefore(bar, document.body.firstChild);
+  }
   if (document.body) show(); else document.addEventListener("DOMContentLoaded", show);
 })();

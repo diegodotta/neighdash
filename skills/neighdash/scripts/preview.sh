@@ -37,12 +37,23 @@ if curl -s -o /dev/null --max-time 2 "$URL"; then echo "Something is already run
 echo "Starting the preview (the first run downloads Cloudflare's tools, give it a minute)..."
 npx -y wrangler dev --port "$PORT" --inspector-port $((PORT + 1000)) --persist-to "$STATE" > "$STATE/dev.log" 2>&1 &
 PID=$!
-trap 'kill $PID 2>/dev/null || true' EXIT INT TERM
+EPID=""
+trap 'kill $PID $EPID 2>/dev/null || true' EXIT INT TERM
 for _ in $(seq 1 120); do
   curl -s -o /dev/null --max-time 2 "$URL" && break
   kill -0 "$PID" 2>/dev/null || { echo "The preview didn't start. Last lines of the log:"; tail -20 "$STATE/dev.log"; exit 1; }
   sleep 1
 done
+
+# Editing from the preview (templates/neighdash-admin.js): only when the site opts in
+# with an "edit" section in neighdash.json.
+EDITING=""
+if [ -f neighdash.json ] && python3 -c 'import json,sys; sys.exit(0 if json.load(open("neighdash.json")).get("edit") else 1)' 2>/dev/null; then
+  python3 "$(dirname "$0")/edit-server.py" . > "$STATE/edit.log" 2>&1 &
+  EPID=$!
+  sleep 1
+  if kill -0 "$EPID" 2>/dev/null; then EDITING=1; else echo "The edit server didn't start:"; tail -5 "$STATE/edit.log"; EPID=""; fi
+fi
 
 cat <<MSG
 
@@ -53,6 +64,12 @@ cat <<MSG
   about, and compare them with the real site in another tab.
 
   Press Ctrl+C here to stop the preview.
+
+MSG
+[ -n "$EDITING" ] && cat <<MSG
+  Editing is on: the bar at the top also lists your drafts and can publish,
+  unpublish or re-date a post. It only changes files on this computer and
+  rebuilds the preview. Nothing goes live until it's committed and deployed.
 
 MSG
 if [ -z "${NO_OPEN:-}" ]; then
