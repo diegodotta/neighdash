@@ -49,7 +49,7 @@ done
 # with an "edit" section in neighdash.json.
 EDITING=""
 if [ -f neighdash.json ] && python3 -c 'import json,sys; sys.exit(0 if json.load(open("neighdash.json")).get("edit") else 1)' 2>/dev/null; then
-  python3 "$(dirname "$0")/edit-server.py" . > "$STATE/edit.log" 2>&1 &
+  python3 "$(dirname "$0")/edit-server.py" . --preview-port "$PORT" > "$STATE/edit.log" 2>&1 &
   EPID=$!
   sleep 1
   if kill -0 "$EPID" 2>/dev/null; then EDITING=1; else echo "The edit server didn't start:"; tail -5 "$STATE/edit.log"; EPID=""; fi

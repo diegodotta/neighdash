@@ -131,7 +131,11 @@ earns its place when there are many pages sharing a layout.
   matter (`draft: true`, `date:`) and rerun the preview build, nothing more: going live
   is still a commit and a deploy, with the owner's yes. The production build must do
   none of the three; `check-dist.py` refuses a build that loads the bar or carries the
-  page map.
+  page map, or the `neighdash-build.txt` stamp the edit server leaves after each preview
+  rebuild (trap 34).
+  Setting this up is mechanical: do it, and explain each step in a sentence, rather than
+  asking the owner technical questions. The one thing worth asking is which editor
+  "Open in editor" should use (`"editor"`: `vscode`, `cursor` or `none`).
 
 ## 5. The Worker (only if needed)
 

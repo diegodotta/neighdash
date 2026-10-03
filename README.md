@@ -75,7 +75,7 @@ plus those files.
 skills/neighdash/
   SKILL.md                 the entry point your agent reads
   references/playbook.md   the procedure, step by step
-  references/traps.md      32 things that go wrong on real migrations, and the fix
+  references/traps.md      34 things that go wrong on real migrations, and the fix
   references/limits.md     what's solvable, what's a real limit, and a plugin map
   references/cloudflare.md API recipes: cutover with rollback, www rule, bot settings, usage
   templates/               wrangler configs, ignores, _headers, _redirects, Worker, probe,
@@ -85,7 +85,8 @@ skills/neighdash/
 tests/selftest.sh          checks the whole kit (run it after changing anything)
 ```
 
-You'll need `git`, the GitHub CLI, Node.js, Python 3 and Chrome, plus a free
+You'll need `git`, the GitHub CLI, Node.js, Python 3.9 or newer (the one macOS ships is
+fine) and Chrome, plus a free
 Cloudflare account. For DNS and zone settings, the agent needs Cloudflare's MCP
 server (`claude mcp add --transport http cloudflare https://mcp.cloudflare.com/mcp`,
 then restart the session) or a scoped API token.

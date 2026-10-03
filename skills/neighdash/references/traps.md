@@ -157,6 +157,13 @@ the HTML files directly) serves the files but ignores `_redirects`, `_headers`,
 aren't, and the 404 page never shows. Preview and test with `wrangler dev`
 (`scripts/preview.sh`), which is Cloudflare's own router running locally.
 
+**34. The preview build and the real build share a folder.** With editing from the
+preview, `build.py --preview` writes drafts, the admin bar and `neighdash-pages.json`
+into the same `dist/` the real build uses. Commit that folder, or `wrangler deploy` from
+the laptop, and the drafts go live. Keep `dist/` out of git (`templates/gitignore.template`
+does), deploy only through the build command, and keep `check-dist.py` at the end of it:
+it refuses a build carrying the bar or the page map.
+
 **27. Put `favicon.ico` at the root.** Browsers ask for it regardless of `<link>` tags.
 
 ## Measuring

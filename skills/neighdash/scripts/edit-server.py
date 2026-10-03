@@ -2,7 +2,11 @@
 """
 Local edit server for the NeighDash admin bar (templates/neighdash-admin.js).
 
-    edit-server.py [site-dir]          (preview.sh starts it when the site opts in)
+    edit-server.py [site-dir] [--preview-port 8787]   (preview.sh starts it when the site opts in)
+
+It listens on the preview's port + 3 (8790 for the usual 8787), so two previews can run
+side by side, and only answers pages from that one preview, so a bar on another site's
+preview can never edit this one.
 
 Publishing a draft, unpublishing a post or changing its date, from the preview,
 without anyone opening a Markdown file. It edits the post's front matter and runs
@@ -15,7 +19,7 @@ The site opts in with a `neighdash.json` next to its wrangler.jsonc:
 
   content   folder (or list of folders) holding the Markdown files it may edit
   build     command that rebuilds the preview after an edit (run in the site folder)
-  port      default 8790
+  port      optional, overrides the preview's port + 3
   editor    "vscode" (default), "cursor" or "none", for the bar's "Open in editor"
 
 Front matter is YAML between `---` lines, with `draft: true` and `date:`, the shape
@@ -26,9 +30,16 @@ localhost page with the X-NeighDash header and a localhost Host (so another webs
 can't trigger it, not even through DNS rebinding), and only touches .md files inside
 the content folders. Standard library only.
 """
-import datetime as dt, http.server, json, pathlib, re, subprocess, sys, urllib.parse
+from __future__ import annotations   # `str | None` annotations on Python 3.9 (macOS ships it)
+import datetime as dt, http.server, json, pathlib, re, subprocess, sys, time, urllib.parse
 
-SITE = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
+args = sys.argv[1:]
+PREVIEW_PORT = None
+if "--preview-port" in args:
+    i = args.index("--preview-port")
+    PREVIEW_PORT = int(args[i + 1])
+    del args[i:i + 2]
+SITE = pathlib.Path(args[0] if args else ".").resolve()
 conf_file = SITE / "neighdash.json"
 if not conf_file.is_file():
     sys.exit(f"No neighdash.json in {SITE}. Add one with an \"edit\" section (see this script's header).")
@@ -36,12 +47,28 @@ CONF = json.loads(conf_file.read_text()).get("edit") or {}
 dirs = CONF.get("content", "content")
 CONTENT = [(SITE / d).resolve() for d in ([dirs] if isinstance(dirs, str) else dirs)]
 BUILD = CONF.get("build")
-PORT = int(CONF.get("port", 8790))
+PORT = int(CONF.get("port") or (PREVIEW_PORT or 8787) + 3)
 EDITOR = CONF.get("editor", "vscode")
 LOCAL = re.compile(r"^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$")
-ORIGIN = re.compile(r"^http://(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$")
+ORIGIN = re.compile(r"^http://(localhost|127\.0\.0\.1|\[::1\])" + (f":{PREVIEW_PORT}$" if PREVIEW_PORT else r"(:\d+)?$"))
 FRONT = re.compile(r"\A(---[ \t]*\r?\n)(.*?\r?\n)(---[ \t]*\r?\n?.*)\Z", re.S)
 DATE = re.compile(r"""^date:[ \t]*(["']?)(\d{4}-\d\d-\d\d)(?:([ T])(\d\d:\d\d)(:\d\d)?)?([^"'\r\n]*)\1[ \t]*$""", re.M)
+
+
+def build_dir():
+    """The folder the preview serves (assets.directory in wrangler.jsonc), or None."""
+    for name in ("wrangler.jsonc", "wrangler.json"):
+        f = SITE / name
+        if f.is_file():
+            t = re.sub(r"(?m)^\s*//.*$", "", f.read_text())
+            t = re.sub(r"(?<=[,{\[\s])//[^\n\"]*$", "", t, flags=re.M)
+            t = re.sub(r",(\s*[}\]])", r"\1", t)
+            try:
+                d = (SITE / json.loads(t).get("assets", {}).get("directory", ".")).resolve()
+            except ValueError:
+                return None
+            return d if d.is_dir() else None
+    return None
 
 
 def content_file(rel: str):
@@ -182,12 +209,18 @@ class Handler(http.server.BaseHTTPRequestHandler):
         err = edit(p, str(data.get("action")), data)
         if err:
             return self.reply(409, {"error": err})
-        rebuilt, log = True, ""
+        rebuilt, log, stamp = True, "", None
         if BUILD:
             r = subprocess.run(BUILD, shell=True, cwd=SITE, capture_output=True, text=True, timeout=600)
             rebuilt, log = r.returncode == 0, (r.stdout + r.stderr)[-800:]
+        out = build_dir()
+        if rebuilt and out and out != SITE:
+            # The bar reloads once the preview serves this exact stamp, so it never shows
+            # the page from before the rebuild (wrangler dev picks files up with a delay).
+            stamp = str(time.time_ns())
+            (out / "neighdash-build.txt").write_text(stamp)
         print(f"  {data.get('action')}: {p.relative_to(SITE)}" + ("" if rebuilt else "  (the build failed)"), flush=True)
-        self.reply(200, {"ok": True, "rebuilt": rebuilt, "log": log})
+        self.reply(200, {"ok": True, "rebuilt": rebuilt, "log": log, "stamp": stamp})
 
 
 if __name__ == "__main__":

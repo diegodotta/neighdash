@@ -12,6 +12,12 @@ SK="$ROOT/skills/neighdash"
 T="$(mktemp -d)"
 PORT=8799
 pass=0; fail=0
+# The oldest Python NeighDash supports is 3.9, the one macOS ships. Run the Python
+# scripts under it when it's here, or a newer python3 hides 3.10-only syntax.
+OLDPY=python3
+for c in /usr/bin/python3 python3.9; do
+  if command -v "$c" >/dev/null && "$c" -c 'import sys; sys.exit(sys.version_info[:2] != (3, 9))' 2>/dev/null; then OLDPY="$c"; break; fi
+done
 ok(){ printf "  \033[32mPASS\033[0m %s\n" "$1"; pass=$((pass+1)); }
 no(){ printf "  \033[31mFAIL\033[0m %s\n" "$1"; fail=$((fail+1)); }
 check(){ local name="$1"; shift; if "$@" >"$T/last.log" 2>&1; then ok "$name"; else no "$name"; sed 's/^/       /' "$T/last.log" | tail -8; fi; }
@@ -51,6 +57,7 @@ echo '<?xml version="1.0"?><rss/>' > "$B/dist/feed/index.html"
 printf 'RIFF' > "$B/dist/wp-content/uploads/2024/01/cat.webp"
 echo '{"123": "/hello-world/"}' > "$B/dist/_wp-ids.json"
 check "check-dist passes on a clean build" python3 "$SK/scripts/check-dist.py" "$B/dist"
+check "check-dist runs on Python 3.9 ($OLDPY)" "$OLDPY" "$SK/scripts/check-dist.py" "$B/dist"
 echo notes > "$B/dist/NOTES.md"
 refuse "check-dist refuses Markdown in the build folder" python3 "$SK/scripts/check-dist.py" "$B/dist"
 rm "$B/dist/NOTES.md"
@@ -62,21 +69,24 @@ echo '<html><head><script src="/neighdash-admin.js" defer></script></head><body>
 refuse "check-dist refuses a page that loads the admin bar" python3 "$SK/scripts/check-dist.py" "$B/dist"
 cp "$T/hello.bak" "$B/dist/hello-world/index.html"
 
-echo "[ edit server ]"
+echo "[ edit server, on $("$OLDPY" -V 2>&1) ]"
 E="$T/md"; mkdir -p "$E/content/posts"
 printf -- '---\ntitle: "Old post"\ndate: "2024-05-01 09:00:00"\n---\nHi.\n' > "$E/content/posts/old.md"
 printf -- '---\ntitle: Idea\ndate: 2026-10-01\ndraft: true\n---\nSoon.\n' > "$E/content/posts/idea.md"
 printf 'secret' > "$E/private.md"
 printf '{ "edit": { "content": "content", "build": "touch built.flag", "port": 8801 } }\n' > "$E/neighdash.json"
-python3 "$SK/scripts/edit-server.py" "$E" >"$T/edit.log" 2>&1 &
+mkdir -p "$E/dist" && printf '{ "name": "md", "assets": { "directory": "./dist" } }\n' > "$E/wrangler.jsonc"
+"$OLDPY" "$SK/scripts/edit-server.py" "$E" --preview-port 8787 >"$T/edit.log" 2>&1 &
 EPID=$!
 for _ in $(seq 1 30); do curl -s -o /dev/null --max-time 1 http://127.0.0.1:8801/ && break; sleep 0.3; done
+check "the edit server starts" kill -0 "$EPID"
 O='Origin: http://localhost:8787'; X='X-NeighDash: 1'; EU=http://127.0.0.1:8801/__neighdash
 post(){ curl -s -o /dev/null -w '%{http_code}' -X POST -H "Content-Type: application/json" "$@"; }
 check "lists the drafts" sh -c "curl -s -H '$O' -H '$X' '$EU/state' | grep -q content/posts/idea.md"
 check "refuses a request with no origin" test "$(curl -s -o /dev/null -w '%{http_code}' -H "$X" "$EU/state")" = 403
 check "refuses another website" test "$(curl -s -o /dev/null -w '%{http_code}' -H 'Origin: https://evil.example' -H "$X" "$EU/state")" = 403
 check "no CORS approval for another website" sh -c "! curl -s -D - -o /dev/null -X OPTIONS -H 'Origin: https://evil.example' '$EU/edit' | grep -qi access-control-allow-origin"
+check "refuses a page from another preview (another port)" test "$(curl -s -o /dev/null -w '%{http_code}' -H 'Origin: http://localhost:8811' -H "$X" "$EU/state")" = 403
 check "refuses DNS rebinding (foreign Host)" test "$(curl -s -o /dev/null -w '%{http_code}' -H 'Host: evil.example:8801' -H "$O" -H "$X" "$EU/state")" = 403
 check "refuses without the custom header" test "$(post -H "$O" -d '{"file":"content/posts/idea.md","action":"publish"}' "$EU/edit")" = 403
 check "refuses a file outside the content folder" test "$(post -H "$O" -H "$X" -d '{"file":"private.md","action":"publish"}' "$EU/edit")" = 403
@@ -84,6 +94,8 @@ check "refuses path traversal" test "$(post -H "$O" -H "$X" -d '{"file":"content
 check "publishes a draft" test "$(post -H "$O" -H "$X" -d '{"file":"content/posts/idea.md","action":"publish"}' "$EU/edit")" = 200
 check "publish removed draft: true" sh -c "! grep -q '^draft:' '$E/content/posts/idea.md'"
 check "ran the build" test -f "$E/built.flag"
+check "stamped the build for the bar" test -s "$E/dist/neighdash-build.txt"
+refuse "check-dist refuses a build carrying the stamp" python3 "$SK/scripts/check-dist.py" "$E/dist"
 check "unpublishes" test "$(post -H "$O" -H "$X" -d '{"file":"content/posts/old.md","action":"unpublish"}' "$EU/edit")" = 200
 check "unpublish added draft: true" grep -q '^draft: true' "$E/content/posts/old.md"
 check "re-dates, keeping the date's format" sh -c "test \"\$(curl -s -o /dev/null -w '%{http_code}' -X POST -H '$O' -H '$X' -d '{\"file\":\"content/posts/old.md\",\"action\":\"date\",\"date\":\"2024-06-02T10:15\"}' '$EU/edit')\" = 200 && grep -q '^date: \"2024-06-02 10:15:00\"' '$E/content/posts/old.md'"

@@ -8,7 +8,7 @@
  * Markdown file it comes from: { "/hello-world/": "content/posts/hello-world.md" }.
  *
  * It only runs on localhost, and only shows up when scripts/edit-server.py answers
- * (data-edit, default http://localhost:8790). Then it takes the place of the yellow
+ * (data-edit, default this page's port + 3, e.g. 8790 for 8787). Then it takes the place of the yellow
  * preview bar, with the same reminder that this is a preview. Its buttons edit the
  * post's front matter and rebuild the preview. Nothing is committed or deployed.
  * scripts/check-dist.py refuses to deploy a build that loads this file.
@@ -18,7 +18,9 @@
   var host = location.hostname;
   if (!/^(localhost|127\.0\.0\.1|\[::1\]|::1)$/.test(host)) return;   // never on a real site
 
-  var EDIT = ((script && script.getAttribute("data-edit")) || "http://localhost:8790").replace(/\/$/, "");
+  // The edit server listens on this preview's port + 3 (preview.sh starts it that way).
+  var EDIT = ((script && script.getAttribute("data-edit")) ||
+    "http://localhost:" + ((+location.port || 80) + 3)).replace(/\/$/, "");
   var live = ((script && script.getAttribute("data-live")) || "").replace(/^www\./, "");
   var H = { "X-NeighDash": "1" };
 
@@ -121,12 +123,27 @@
       getJSON(EDIT + "/__neighdash/edit", { method: "POST", headers: { "Content-Type": "application/json", "X-NeighDash": "1" }, body: JSON.stringify(body) })
         .then(function (j) {
           if (!j.rebuilt) alert("Saved, but the build failed:\n\n" + j.log);
-          setTimeout(function () { location.reload(); }, 400);   // give the preview a moment to pick up the new files
+          reloadWhenBuilt(j.stamp);
         })
         .catch(function (err) {
           alert("Couldn't save: " + err.message);
           root.querySelectorAll("button").forEach(function (x) { x.disabled = false; });
         });
+    }
+    // wrangler dev picks up the rebuilt files a moment after the build ends. The edit
+    // server writes a stamp into the build folder: reload once the preview serves it.
+    function reloadWhenBuilt(stamp) {
+      if (!stamp) { setTimeout(function () { location.reload(); }, 1000); return; }
+      var tries = 0;
+      (function poll() {
+        fetch("/neighdash-build.txt", { cache: "no-store" })
+          .then(function (r) { return r.ok ? r.text() : ""; })
+          .catch(function () { return ""; })
+          .then(function (t) {
+            if (t.trim() === stamp || ++tries > 40) location.reload();
+            else setTimeout(poll, 200);
+          });
+      })();
     }
     root.addEventListener("click", function (e) {
       var b = e.target.closest("button[data-act]");

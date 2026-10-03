@@ -48,8 +48,9 @@ for core in S["required"]:
 
 # The local admin bar (templates/neighdash-admin.js) and its page map only belong in
 # preview builds. Not a setting: a deployable build never carries them.
-if any(f.name == "neighdash-pages.json" for f in files):
-    fail("neighdash-pages.json is in the build folder: this is a preview build, never deploy it")
+for marker in ("neighdash-pages.json", "neighdash-build.txt"):
+    if any(f.name == marker for f in files):
+        fail(f"{marker} is in the build folder: this is a preview build, never deploy it")
 
 ref_re = re.compile(r'(?:src|poster|href)="(/[^"#?]+)"|srcset="([^"]+)"')
 own = re.compile(rf'https://(?:www\.)?{re.escape(S["domain"])}(/wp-content/[^"\s<>)]+)') if S["domain"] else None
