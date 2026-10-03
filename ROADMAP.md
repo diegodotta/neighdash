@@ -32,7 +32,35 @@ To work with whatever generator a site uses, it comes as:
 - a rule in `scripts/check-dist.py` that refuses to deploy if the bar ever reaches the
   built site, plus self-test cases for all of it
 
-## 0.3: Start from scratch
+## 0.3: A front door
+
+**Status: next.** From the first real run of 0.2: it worked, but it felt like a
+developer tool. The permission prompts were the scary part, with no clear reason
+for each one.
+
+- **Start with a welcome and one plain choice:** move an old site, start a new
+  blog, or put a folder of files online. Offered as clickable options where the app
+  supports them, not as a question to type an answer to.
+- **Accounts first, as a checklist the agent verifies:** GitHub, then Cloudflare,
+  one at a time with links, checked by the agent itself (logged in or not) instead of
+  coming up halfway through.
+- **A plain progress line:** "Step 2 of 5: getting your accounts ready", so the owner
+  always knows where they are and what's left.
+- **Fewer permission prompts, and a reason for each:**
+  - A suggested project settings file that pre-approves the safe, read-only commands
+    (looking at files, checking the preview, running the checks), offered once, with
+    the list shown in plain words.
+  - Before anything that still needs a yes, one sentence on why it's needed and what
+    it changes.
+  - Group related steps so one yes covers one clearly described action, instead of a
+    yes per command.
+- **No browser automation unless it's needed.** Checking the preview works with
+  plain requests. Screenshots or driving Chrome only come in at the visual review
+  step, explained first, or when the owner asks.
+- **Test it the way an owner would:** in the Claude desktop app, starting from one
+  plain sentence, with nothing set up.
+
+## 0.4: Start from scratch
 
 **Status: idea.**
 
@@ -48,8 +76,8 @@ small blog that's ready to write in:
 - the same deploy gate, route checks and preview (with the 0.2 admin bar) as a migrated
   site
 
-The admin bar is what makes this work for people who don't want to touch files, which
-is why it comes first.
+The admin bar is what makes this work for people who don't want to touch files, and
+the front door is how they get here, which is why both come first.
 
 ## More admin bar ideas
 

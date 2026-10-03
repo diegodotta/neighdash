@@ -102,8 +102,9 @@ sitemap.
 
 ## What's next
 
-Starting a new blog from scratch, with a home page, posts, About, a menu and a footer
-ready to write in. The plan is in [ROADMAP.md](ROADMAP.md).
+A friendlier start for people who aren't technical (one plain choice, accounts as a
+checklist, far fewer permission prompts), then starting a new blog from scratch. The
+plan is in [ROADMAP.md](ROADMAP.md).
 
 ## Honest small print
 
